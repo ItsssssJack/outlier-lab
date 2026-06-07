@@ -293,7 +293,7 @@ def main():
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>IG Outlier Lab — {today}</title>
+<title>Outlier Lab — {today}</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root {{
@@ -503,7 +503,7 @@ def main():
 
   <header class="hero">
     <div>
-      <div class="eyebrow">IG Outlier Lab</div>
+      <div class="eyebrow">Outlier Lab</div>
       <h1>What's <span class="accent">going viral</span> in your niche today.</h1>
       <p class="sub">Rolling 28-day competitive intel. Outlier ratio = each reel's plays ÷ that account's own median.</p>
     </div>
@@ -604,7 +604,7 @@ def main():
   </div>
 
   <footer>
-    <div>IG Outlier Lab · v1.2 · {len(creators)} creator{'' if len(creators)==1 else 's'} tracked — multi-account list comes next</div>
+    <div>Outlier Lab · v1.2 · {len(creators)} creator{'' if len(creators)==1 else 's'} tracked — multi-account list comes next</div>
     <div>Data: Apify · Built {datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
   </footer>
 
