@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-IG Dashboard v1.2 — table-first layout.
+Outlier Lab — dashboard renderer — table-first layout.
 
 Table is the primary view. Grid is a toggle. Creators section is a row of chips
 that filter the table. Multi-creator ready.
