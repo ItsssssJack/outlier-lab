@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Outlier Lab — Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --bg-2: #14141a;
+    --bg-3: #1e1e26;
+    --fg: #f4f4f6;
+    --fg-dim: rgba(244,244,246,.55);
+    --fg-faint: rgba(244,244,246,.32);
+    --orange: #FF8A3D;
+    --pink: #FF3D6E;
+    --green: #2DD46F;
+    --border: rgba(255,255,255,.08);
+    --border-strong: rgba(255,255,255,.16);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* HEADER */
+  header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 18px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--pink)); box-shadow: 0 0 16px rgba(255,138,61,.5); }
+  .brand h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+  .brand .eyebrow { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--fg-faint); display: block; margin-top: 1px; }
+  .conn-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .conn-badge.ok { background: rgba(45,212,111,.12); color: var(--green); border: 1px solid rgba(45,212,111,.25); }
+  .conn-badge.no { background: rgba(255,61,110,.12); color: var(--pink); border: 1px solid rgba(255,61,110,.25); }
+  .conn-badge::before { content: "●"; }
+
+  /* SECTIONS */
+  section { background: var(--bg-2); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; margin-bottom: 18px; position: relative; }
+  section .label { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-faint); margin: 0 0 6px; font-weight: 600; }
+  section h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px; letter-spacing: -.01em; }
+  section .help { font-size: 12px; color: var(--fg-dim); margin: 0 0 16px; line-height: 1.45; }
+  section .help a { color: var(--orange); text-decoration: none; border-bottom: 1px dotted var(--orange); }
+
+  /* INPUTS */
+  input[type=text], input[type=password] {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--fg);
+    font: inherit; font-size: 13px;
+    outline: none;
+    transition: border-color .12s;
+  }
+  input:focus { border-color: var(--orange); background: var(--bg); }
+  .row { display: flex; gap: 8px; align-items: stretch; }
+  .row input { flex: 1; }
+  button.btn {
+    padding: 11px 18px;
+    background: var(--orange);
+    color: #0a0a0c;
+    border: 0; border-radius: 9px;
+    font: inherit; font-size: 13px; font-weight: 700;
+    cursor: pointer;
+    transition: background .12s;
+    white-space: nowrap;
+  }
+  button.btn:hover { background: var(--pink); color: #fff; }
+  button.btn.ghost { background: transparent; color: var(--fg-dim); border: 1px solid var(--border); }
+  button.btn.ghost:hover { border-color: var(--orange); color: var(--orange); background: transparent; }
+  button.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .status { font-size: 11px; color: var(--fg-faint); margin-top: 8px; min-height: 14px; }
+  .status.ok { color: var(--green); }
+  .status.bad { color: var(--pink); }
+
+  /* SEARCH RESULTS */
+  .results { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .result {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color .12s;
+  }
+  .result:hover { border-color: var(--border-strong); }
+  .result img.avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg); }
+  .result .info { flex: 1; min-width: 0; }
+  .result .name { font-size: 14px; font-weight: 600; line-height: 1.2; }
+  .result .name .verified { color: var(--orange); margin-left: 4px; font-size: 11px; }
+  .result .handle { font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
+  .result .stats { font-size: 11px; color: var(--fg-faint); }
+  .result button.add { padding: 7px 13px; font-size: 12px; }
+  .result.added button.add { background: var(--bg-2); color: var(--green); border: 1px solid rgba(45,212,111,.3); }
+  .result.added button.add::after { content: " ✓"; }
+
+  /* TRACKING LIST */
+  .creators-list { display: flex; flex-direction: column; gap: 8px; }
+  .creator-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .creator-row img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--bg); }
+  .creator-row .info { flex: 1; min-width: 0; }
+  .creator-row .remove { color: var(--fg-faint); font-size: 16px; padding: 6px 10px; cursor: pointer; background: transparent; border: 0; border-radius: 7px; transition: all .12s; }
+  .creator-row .remove:hover { background: rgba(255,61,110,.12); color: var(--pink); }
+  .empty-state {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--fg-faint);
+    font-size: 13px;
+    background: var(--bg-3);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+  }
+
+  /* SCHEDULE */
+  .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .schedule-opt {
+    padding: 12px 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .12s;
+    text-align: left;
+  }
+  .schedule-opt:hover { border-color: var(--border-strong); }
+  .schedule-opt.active { background: linear-gradient(135deg, rgba(255,138,61,.12), rgba(255,61,110,.06)); border-color: var(--orange); }
+  .schedule-opt .label-row { font-size: 13px; font-weight: 600; }
+  .schedule-opt .cron { font-size: 10px; color: var(--fg-faint); margin-top: 4px; font-family: ui-monospace, SFMono-Regular, monospace; letter-spacing: -.02em; }
+  .schedule-opt.active .cron { color: var(--orange); }
+
+  /* ACTIONS */
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    opacity: 0; transition: opacity .2s, transform .2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .toast.ok { background: rgba(45,212,111,.9); color: #0a0a0c; }
+  .toast.bad { background: rgba(255,61,110,.9); color: #fff; }
+  .toast.info { background: rgba(255,138,61,.9); color: #0a0a0c; }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.2);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <span class="eyebrow">Outlier Lab</span>
+        <h1>Admin</h1>
+      </div>
+    </div>
+    <span id="conn-badge" class="conn-badge no">No token</span>
+  </header>
+
+  <!-- 1. APIFY TOKEN -->
+  <section>
+    <div class="label">Step 1</div>
+    <h2>Apify API token</h2>
+    <p class="help">Get yours at <a href="https://console.apify.com/settings/api" target="_blank">console.apify.com/settings/api</a>. Stored locally in <code>.env</code>; never committed to git.</p>
+    <div class="row">
+      <input id="token-input" type="password" placeholder="apify_api_..." autocomplete="off">
+      <button id="token-save" class="btn">Save</button>
+    </div>
+    <div id="token-status" class="status"></div>
+  </section>
+
+  <!-- 2. SEARCH + ADD CREATORS -->
+  <section>
+    <div class="label">Step 2</div>
+    <h2>Add creators</h2>
+    <p class="help">Type a name or handle. We'll search Instagram via Apify and show matching profiles. Click "Add" to start tracking.</p>
+    <div class="row">
+      <input id="search-input" type="text" placeholder="Search creators by name or @handle…" autocomplete="off">
+    </div>
+    <div id="results" class="results"></div>
+    <div id="search-status" class="status"></div>
+  </section>
+
+  <!-- 3. CURRENTLY TRACKING -->
+  <section>
+    <div class="label">Tracking</div>
+    <h2>Currently tracked creators <span id="creators-count" style="color:var(--fg-faint);font-weight:400;font-size:14px"></span></h2>
+    <p class="help">These will be scraped on every refresh. Remove any you no longer want.</p>
+    <div id="creators-list" class="creators-list"></div>
+  </section>
+
+  <!-- 4. SCHEDULE -->
+  <section>
+    <div class="label">Step 3</div>
+    <h2>Refresh schedule</h2>
+    <p class="help">How often should GitHub Actions auto-refresh your dashboard? After changing, commit + push <code>.github/workflows/refresh.yml</code> for it to take effect.</p>
+    <div id="schedule-grid" class="schedule-grid">
+      <button class="schedule-opt" data-cron="0 11 * * *">
+        <div class="label-row">Daily · 7am ET</div>
+        <div class="cron">0 11 * * *</div>
+      </button>
+      <button class="schedule-opt" data-cron="0 11 */3 * *">
+        <div class="label-row">Every 3 days</div>
+        <div class="cron">0 11 */3 * *</div>
+      </button>
+      <button class="schedule-opt" data-cron="0 11 * * 0">
+        <div class="label-row">Weekly · Sunday</div>
+        <div class="cron">0 11 * * 0</div>
+      </button>
+      <button class="schedule-opt" data-cron="0 11 * * 1">
+        <div class="label-row">Weekly · Monday</div>
+        <div class="cron">0 11 * * 1</div>
+      </button>
+      <button class="schedule-opt" data-cron="0 11 1 * *">
+        <div class="label-row">Monthly · 1st</div>
+        <div class="cron">0 11 1 * *</div>
+      </button>
+      <button class="schedule-opt" data-cron="off">
+        <div class="label-row">Off (manual only)</div>
+        <div class="cron">— no cron —</div>
+      </button>
+    </div>
+    <div id="schedule-status" class="status"></div>
+  </section>
+
+  <!-- 5. RUN / VIEW -->
+  <section>
+    <div class="label">Step 4</div>
+    <h2>Run + view</h2>
+    <p class="help">Run the pipeline now to generate <code>index.html</code> from your current creator list. Takes ~5-10 minutes on first run depending on creator count.</p>
+    <div class="actions">
+      <button id="run-refresh" class="btn">Run refresh now</button>
+      <button id="open-dashboard" class="btn ghost">Open dashboard ↗</button>
+    </div>
+    <div id="run-status" class="status"></div>
+  </section>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+let STATE = { tokenSet: false, creators: [] };
+
+// ───── toast ─────
+function toast(msg, kind = "info", dur = 2200) {
+  const t = $("#toast");
+  t.className = `toast show ${kind}`;
+  t.textContent = msg;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = "toast"; }, dur);
+}
+
+// ───── state load ─────
+async function loadState() {
+  const r = await fetch("/api/state");
+  STATE = await r.json();
+  renderHeader();
+  renderCreators();
+  if (STATE.tokenSet) {
+    $("#token-input").placeholder = STATE.tokenPrefix || "apify_api_… (saved)";
+  }
+}
+
+function renderHeader() {
+  const badge = $("#conn-badge");
+  if (STATE.tokenSet) {
+    badge.className = "conn-badge ok";
+    badge.textContent = "Apify connected";
+  } else {
+    badge.className = "conn-badge no";
+    badge.textContent = "No token";
+  }
+}
+
+function renderCreators() {
+  const list = $("#creators-list");
+  const count = $("#creators-count");
+  count.textContent = STATE.creators.length ? `· ${STATE.creators.length}` : "";
+  if (!STATE.creators.length) {
+    list.innerHTML = `<div class="empty-state">No creators yet — search above and add some.</div>`;
+    return;
+  }
+  list.innerHTML = STATE.creators.map(c => `
+    <div class="creator-row" data-handle="${escapeHtml(c.handle)}">
+      ${c.profilePic ? `<img src="${escapeHtml(c.profilePic)}" alt="" referrerpolicy="no-referrer" onerror="this.style.opacity=.2">` : `<div style="width:40px;height:40px;border-radius:50%;background:var(--bg)"></div>`}
+      <div class="info">
+        <div class="name">${escapeHtml(c.name || c.handle)}${c.verified ? '<span class="verified">✓</span>' : ''}</div>
+        <div class="handle">@${escapeHtml(c.handle)} · ${fmtNum(c.followers)} followers · ${c.posts || 0} posts</div>
+      </div>
+      <button class="remove" data-action="remove" data-handle="${escapeHtml(c.handle)}" title="Stop tracking">×</button>
+    </div>
+  `).join("");
+}
+
+function fmtNum(n) {
+  if (!n) return "0";
+  if (n >= 1e6) return (n/1e6).toFixed(1) + "M";
+  if (n >= 1e4) return Math.round(n/1e3) + "K";
+  if (n >= 1e3) return (n/1e3).toFixed(1) + "K";
+  return String(Math.round(n));
+}
+
+function escapeHtml(s) {
+  if (!s) return "";
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+// ───── token ─────
+$("#token-save").addEventListener("click", async () => {
+  const token = $("#token-input").value.trim();
+  if (!token) { toast("Paste a token first", "bad"); return; }
+  const r = await fetch("/api/token", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({token}),
+  });
+  const j = await r.json();
+  if (r.ok) {
+    toast("Token saved ✓", "ok");
+    $("#token-input").value = "";
+    await loadState();
+  } else {
+    toast(j.message || "Bad token", "bad");
+  }
+});
+
+// ───── search ─────
+let searchTimer = null;
+$("#search-input").addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  const q = $("#search-input").value.trim();
+  if (!q) { $("#results").innerHTML = ""; $("#search-status").textContent = ""; return; }
+  if (!STATE.tokenSet) { $("#search-status").textContent = "Save your Apify token first."; $("#search-status").className = "status bad"; return; }
+  $("#search-status").innerHTML = '<span class="spinner"></span> searching…';
+  $("#search-status").className = "status";
+  searchTimer = setTimeout(doSearch, 450);
+});
+
+async function doSearch() {
+  const q = $("#search-input").value.trim();
+  if (!q) return;
+  try {
+    const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const j = await r.json();
+    if (!r.ok) {
+      $("#search-status").textContent = j.message || "Search failed";
+      $("#search-status").className = "status bad";
+      return;
+    }
+    renderResults(j.results || []);
+    $("#search-status").textContent = j.results?.length ? `${j.results.length} match${j.results.length === 1 ? "" : "es"}` : "No matches";
+    $("#search-status").className = "status";
+  } catch (e) {
+    $("#search-status").textContent = "Search failed: " + e.message;
+    $("#search-status").className = "status bad";
+  }
+}
+
+function renderResults(results) {
+  const trackedHandles = new Set(STATE.creators.map(c => c.handle));
+  $("#results").innerHTML = results.map(r => {
+    const added = trackedHandles.has(r.handle);
+    return `
+      <div class="result ${added ? 'added' : ''}" data-handle="${escapeHtml(r.handle)}">
+        ${r.profilePic ? `<img class="avatar" src="${escapeHtml(r.profilePic)}" alt="" referrerpolicy="no-referrer" onerror="this.style.opacity=.2">` : `<div class="avatar"></div>`}
+        <div class="info">
+          <div class="name">${escapeHtml(r.name || r.handle)}${r.verified ? '<span class="verified">✓</span>' : ''}</div>
+          <div class="handle">@${escapeHtml(r.handle)}</div>
+          <div class="stats">${fmtNum(r.followers)} followers · ${r.posts || 0} posts${r.private ? ' · 🔒 private' : ''}</div>
+        </div>
+        <button class="btn add" data-action="add" data-handle="${escapeHtml(r.handle)}" ${added || r.private ? 'disabled' : ''}>${added ? 'Added' : 'Add'}</button>
+      </div>
+    `;
+  }).join("");
+}
+
+// ───── add/remove via event delegation ─────
+document.addEventListener("click", async (e) => {
+  const action = e.target.dataset.action;
+  if (!action) return;
+  const handle = e.target.dataset.handle;
+  if (!handle) return;
+
+  if (action === "add") {
+    e.target.disabled = true;
+    e.target.textContent = "…";
+    const profile = await lookupProfile(handle);
+    if (!profile) { e.target.disabled = false; e.target.textContent = "Add"; return; }
+    const r = await fetch("/api/creators", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({profile}),
+    });
+    if (r.ok) {
+      const j = await r.json();
+      STATE.creators = j.creators;
+      renderCreators();
+      e.target.closest(".result").classList.add("added");
+      e.target.textContent = "Added";
+      toast(`@${handle} added ✓`, "ok");
+    } else {
+      const j = await r.json();
+      toast(j.error === "already_added" ? "Already tracking" : (j.message || "Failed to add"), "bad");
+      e.target.disabled = false;
+      e.target.textContent = "Add";
+    }
+  }
+
+  if (action === "remove") {
+    if (!confirm(`Stop tracking @${handle}?`)) return;
+    const r = await fetch(`/api/creators/${encodeURIComponent(handle)}`, {method: "DELETE"});
+    if (r.ok) {
+      const j = await r.json();
+      STATE.creators = j.creators;
+      renderCreators();
+      // also update search result state if visible
+      const resultRow = document.querySelector(`.result[data-handle="${handle}"]`);
+      if (resultRow) {
+        resultRow.classList.remove("added");
+        const btn = resultRow.querySelector(".add");
+        btn.disabled = false; btn.textContent = "Add";
+      }
+      toast(`@${handle} removed`, "info");
+    }
+  }
+});
+
+async function lookupProfile(handle) {
+  const r = await fetch("/api/lookup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({handle}),
+  });
+  if (!r.ok) {
+    const j = await r.json();
+    toast(j.message || "Lookup failed", "bad");
+    return null;
+  }
+  const j = await r.json();
+  return j.profile;
+}
+
+// ───── schedule ─────
+async function loadSchedule() {
+  try {
+    const r = await fetch("/api/schedule");
+    const j = await r.json();
+    const current = j.cron || "0 11 * * 0";  // default weekly Sunday
+    document.querySelectorAll(".schedule-opt").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.cron === current);
+    });
+  } catch {}
+}
+
+document.querySelectorAll(".schedule-opt").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const cron = btn.dataset.cron;
+    document.querySelectorAll(".schedule-opt").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const r = await fetch("/api/schedule", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({cron}),
+    });
+    const j = await r.json();
+    if (r.ok) {
+      $("#schedule-status").textContent = j.message || `Schedule saved · don't forget: git add . && git commit -m "schedule" && git push`;
+      $("#schedule-status").className = "status ok";
+      toast("Schedule saved ✓", "ok");
+    } else {
+      $("#schedule-status").textContent = j.message || "Failed to save";
+      $("#schedule-status").className = "status bad";
+    }
+  });
+});
+
+// ───── run refresh ─────
+$("#run-refresh").addEventListener("click", async () => {
+  if (!STATE.tokenSet) { toast("Save your Apify token first", "bad"); return; }
+  if (!STATE.creators.length) { toast("Add at least one creator first", "bad"); return; }
+  if (!confirm(`Run a refresh now for ${STATE.creators.length} creator${STATE.creators.length === 1 ? '' : 's'}? Takes ~5–10 min.`)) return;
+  $("#run-refresh").disabled = true;
+  $("#run-refresh").innerHTML = '<span class="spinner"></span> Running…';
+  $("#run-status").innerHTML = 'Refresh started — see <code>refresh.log</code> for progress. This window won\'t auto-refresh; reload manually when done.';
+  $("#run-status").className = "status";
+  try {
+    const r = await fetch("/api/refresh", {method: "POST"});
+    const j = await r.json();
+    if (r.ok) {
+      toast(`Refresh started (PID ${j.pid})`, "ok");
+    } else {
+      toast(j.message || "Failed to start", "bad");
+      $("#run-refresh").disabled = false;
+      $("#run-refresh").textContent = "Run refresh now";
+    }
+  } catch (e) {
+    toast("Failed: " + e.message, "bad");
+    $("#run-refresh").disabled = false;
+    $("#run-refresh").textContent = "Run refresh now";
+  }
+});
+
+$("#open-dashboard").addEventListener("click", () => {
+  window.open("/", "_blank");
+});
+
+// ───── init ─────
+loadState();
+loadSchedule();
+</script>
+</body>
+</html>
