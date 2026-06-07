@@ -1,0 +1,13 @@
+{
+  "creators": [
+    {
+      "handle": "example_creator_handle",
+      "name": "Example Creator",
+      "followers": 100000,
+      "posts": 250,
+      "verified": true,
+      "private": false,
+      "profilePic": "https://..."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+name: Weekly refresh
+
+on:
+  # Sundays at 11:00 UTC = 7:00 AM EDT / 6:00 AM EST.
+  # Change the cron string if you want a different time/cadence.
+  # https://crontab.guru/ helps you pick.
+  schedule:
+    - cron: "0 11 * * 0"
+  workflow_dispatch:  # manual "run now" button in the Actions tab
+
+permissions:
+  contents: write  # required to commit refreshed data back to the repo
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Run refresh pipeline
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: python3 refresh.py
+
+      - name: Commit refreshed data + dashboard
+        run: |
+          git config user.name  "outlier-lab-bot"
+          git config user.email "outlier-lab-bot@users.noreply.github.com"
+          git add data/ thumbs/ clips/ index.html || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Weekly refresh: $(date -u +%Y-%m-%d)"
+            git push
+          fi

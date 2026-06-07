@@ -1,0 +1,21 @@
+# secrets — NEVER commit
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Vercel
+.vercel/
+
+# Logs
+*.log
